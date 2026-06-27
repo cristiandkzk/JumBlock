@@ -17,6 +17,19 @@ Extension MV3 para Chrome/Edge/Brave que detecta publicidad y la saltea, sin blo
   1. Oculta contenedores de ad conocidos (Google Ads/AdSense, Taboola, Outbrain, `data-ad-slot`) por CSS.
   2. **Bloquea pop-ups / pop-unders**: reemplaza `window.open` (script en `document_start`, mundo MAIN) y solo permite UNA apertura justo despues de un click real tuyo; las automaticas o las extra del mismo click se bloquean. Util en sitios de stream/descargas.
   3. **Mata overlays que secuestran el click**: el `<div>`/`<a>` transparente a pantalla completa que hace que tu primer click en "play" sea un redirect; se detecta por cubrir >=85% de la pantalla con z-index alto y sin contenido, y se neutraliza.
+  4. **Acortadores con peaje (best-effort)**: en dominios conocidos (exe.io, ouo.io, adf.ly, linkvertise, etc. — lista en `popup.js`) auto-clickea los botones de avance ("Continue", captcha pintado, "Get link") y pone en cero los contadores de pantalla. Ver limitaciones abajo.
+
+## Acortadores: limitaciones y FastForward
+
+El modulo de acortadores (`src/shortener.js`) es best-effort. NO puede sortear:
+- Pasos que validan `isTrusted` (clicks por codigo no cuentan como humanos).
+- reCAPTCHA de Google real (no el boton pintado).
+- Contadores atados a un token del servidor.
+
+Para esos sitios, la herramienta dedicada y mantenida por la comunidad es
+**FastForward** (https://github.com/FastForwardTeam/FastForward), que tiene reglas
+por-sitio y a veces salta directo al link final. Recomendado usarlo en paralelo:
+FastForward para acortadores, JumpBlock para YouTube/Twitch/pop-ups.
 
 ## Limitaciones conocidas
 

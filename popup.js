@@ -1,6 +1,35 @@
 const GENERIC_SCRIPT_ID = "generic-ad-hide";
 const ANTIPOPUP_SCRIPT_ID = "antipopup";
-const ALL_IDS = [GENERIC_SCRIPT_ID, ANTIPOPUP_SCRIPT_ID];
+const SHORTENER_SCRIPT_ID = "shortener-skip";
+const ALL_IDS = [GENERIC_SCRIPT_ID, ANTIPOPUP_SCRIPT_ID, SHORTENER_SCRIPT_ID];
+
+// Acortadores con peaje conocidos. Agregar mas aca si aparece alguno nuevo.
+const SHORTENER_DOMAINS = [
+  "exe.io",
+  "exey.io",
+  "exeygo.com",
+  "ouo.io",
+  "ouo.press",
+  "adf.ly",
+  "adfoc.us",
+  "linkvertise.com",
+  "link-to.net",
+  "shrinkme.io",
+  "shrinkearn.com",
+  "za.gl",
+  "clk.sh",
+  "cuty.io",
+  "gplinks.in",
+  "gplinks.co",
+  "droplink.co",
+  "mboost.me",
+  "ay.live",
+  "shorte.st",
+];
+const SHORTENER_MATCHES = SHORTENER_DOMAINS.flatMap((d) => [
+  `*://${d}/*`,
+  `*://*.${d}/*`,
+]);
 
 const ytEl = document.getElementById("yt");
 const twEl = document.getElementById("tw");
@@ -70,6 +99,17 @@ async function registerGenericScript() {
       // para poder reemplazar window.open.
       runAt: "document_start",
       world: "MAIN",
+    });
+  }
+  if (!have.has(SHORTENER_SCRIPT_ID)) {
+    toAdd.push({
+      id: SHORTENER_SCRIPT_ID,
+      // SOLO en acortadores conocidos, para no auto-clickear "Continue" en
+      // webs normales (checkout, formularios, etc.).
+      matches: SHORTENER_MATCHES,
+      js: ["src/shortener.js"],
+      runAt: "document_idle",
+      allFrames: true,
     });
   }
   if (toAdd.length) {
