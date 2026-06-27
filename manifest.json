@@ -11,6 +11,12 @@
     "48": "icons/icon.png",
     "128": "icons/icon.png"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/icon.png"],
+      "matches": ["*://*.twitch.tv/*"]
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

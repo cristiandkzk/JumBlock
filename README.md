@@ -13,7 +13,10 @@ Extension MV3 para Chrome/Edge/Brave que detecta publicidad y la saltea, sin blo
 
 - **YouTube**: cuando aparece el boton "Saltar anuncio" lo clickea solo. Si el anuncio no es skippeable todavia, adelanta el video al final (`currentTime = duration`) y mutea mientras dura, restaurando el mute original al terminar.
 - **Twitch**: detecta el overlay/label de anuncio y mutea el video mientras esta activo. Twitch inyecta el ad server-side dentro del mismo stream en vivo, asi que no existe forma real de "saltar" tiempo ni un boton de skip; mutear es lo maximo viable.
-- **Banners (otras webs)**: oculta contenedores de ad conocidos (Google Ads/AdSense, Taboola, Outbrain, slots genericos `data-ad-slot`, etc) por CSS, sin bloquear la request. Apagado por defecto porque pide permiso de host en todas las paginas (`<all_urls>`); al activarlo desde el popup, Chrome pide confirmar ese permiso una sola vez.
+- **Banners + pop-ups (otras webs)**: apagado por defecto, pide permiso `<all_urls>` (Chrome lo confirma una vez al activarlo). Sin usar listas, hace tres cosas por COMPORTAMIENTO:
+  1. Oculta contenedores de ad conocidos (Google Ads/AdSense, Taboola, Outbrain, `data-ad-slot`) por CSS.
+  2. **Bloquea pop-ups / pop-unders**: reemplaza `window.open` (script en `document_start`, mundo MAIN) y solo permite UNA apertura justo despues de un click real tuyo; las automaticas o las extra del mismo click se bloquean. Util en sitios de stream/descargas.
+  3. **Mata overlays que secuestran el click**: el `<div>`/`<a>` transparente a pantalla completa que hace que tu primer click en "play" sea un redirect; se detecta por cubrir >=85% de la pantalla con z-index alto y sin contenido, y se neutraliza.
 
 ## Limitaciones conocidas
 

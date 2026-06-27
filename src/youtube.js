@@ -13,13 +13,12 @@
     ".ytp-skip-ad-button",
   ];
 
-  // Botones de cerrar de los anuncios de IMAGEN/overlay (no son video).
+  // SOLO el boton de cerrar real del banner overlay. Ojo: clickear el contenedor
+  // o el icono generico EXPANDE el anuncio (abre su iframe = caja blanca), no lo
+  // cierra. Por eso aca va unicamente la "X".
   const OVERLAY_CLOSE_SELECTORS = [
     ".ytp-ad-overlay-close-button",
-    ".ytp-ad-overlay-close-container",
-    ".ytp-ad-image-overlay .ytp-ad-overlay-close-button",
-    "#dismiss-button button",
-    ".ytp-ad-button-icon",
+    ".ytp-ad-overlay-close-container .ytp-ad-overlay-close-button",
   ];
 
   function clickFirst(selectors) {
@@ -38,7 +37,8 @@
   }
 
   function closeOverlayAds() {
-    // Estos aparecen aunque el player NO este en "ad-showing" (banner sobre el video).
+    // El banner overlay aparece aunque el player NO este en "ad-showing".
+    // Solo cerramos si existe la "X"; nunca tocamos el cuerpo del anuncio.
     clickFirst(OVERLAY_CLOSE_SELECTORS);
   }
 
@@ -57,20 +57,39 @@
         video.muted = video.dataset.adsMuteRestore === "1";
         delete video.dataset.adsMuteRestore;
       }
+      if (video.dataset.adsRateRestore !== undefined) {
+        try {
+          video.playbackRate = parseFloat(video.dataset.adsRateRestore) || 1;
+        } catch (e) {
+          /* ignore */
+        }
+        delete video.dataset.adsRateRestore;
+      }
       return;
     }
 
     if (video.dataset.adsMuteRestore === undefined) {
       video.dataset.adsMuteRestore = video.muted ? "1" : "0";
+      video.dataset.adsRateRestore = String(video.playbackRate || 1);
     }
     video.muted = true;
 
     if (clickSkipIfPresent()) return;
 
-    // ad no skippeable todavia: la dejamos "correr" (cuenta impresion) pero
-    // saltamos el tiempo al final para que el player avance solo.
+    // Ad no skippeable todavia. Dos vias en paralelo (la que YouTube no bloquee,
+    // gana). Los ads de YouTube son VOD (no en vivo), asi que acelerar no choca
+    // ningun borde de directo: a 16x un ad de 15s se quema en ~1s.
+    // 1) Saltar el tiempo al final.
     if (isFinite(video.duration) && video.duration > 0 && video.currentTime < video.duration - 0.25) {
       video.currentTime = video.duration;
+    }
+    // 2) Acelerar al maximo (fallback si el seek esta bloqueado).
+    if (video.playbackRate < 16) {
+      try {
+        video.playbackRate = 16;
+      } catch (e) {
+        /* algunos navegadores limitan el rate; igual el seek puede funcionar */
+      }
     }
   }
 

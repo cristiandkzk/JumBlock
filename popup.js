@@ -1,4 +1,6 @@
 const GENERIC_SCRIPT_ID = "generic-ad-hide";
+const ANTIPOPUP_SCRIPT_ID = "antipopup";
+const ALL_IDS = [GENERIC_SCRIPT_ID, ANTIPOPUP_SCRIPT_ID];
 
 const ytEl = document.getElementById("yt");
 const twEl = document.getElementById("tw");
@@ -36,26 +38,41 @@ genEl.addEventListener("change", async () => {
   } else {
     chrome.storage.sync.set({ enableGeneric: false });
     try {
-      await chrome.scripting.unregisterContentScripts({ ids: [GENERIC_SCRIPT_ID] });
+      await chrome.scripting.unregisterContentScripts({ ids: ALL_IDS });
     } catch (e) {
-      // no estaba registrado, no pasa nada
+      // no estaban registrados, no pasa nada
     }
     statusEl.textContent = "Desactivado.";
   }
 });
 
 async function registerGenericScript() {
-  const existing = await chrome.scripting.getRegisteredContentScripts({
-    ids: [GENERIC_SCRIPT_ID],
-  });
-  if (existing.length) return;
-  await chrome.scripting.registerContentScripts([
-    {
+  const existing = await chrome.scripting.getRegisteredContentScripts({ ids: ALL_IDS });
+  const have = new Set(existing.map((s) => s.id));
+  const toAdd = [];
+
+  if (!have.has(GENERIC_SCRIPT_ID)) {
+    toAdd.push({
       id: GENERIC_SCRIPT_ID,
       matches: ["<all_urls>"],
       excludeMatches: ["*://*.youtube.com/*", "*://*.twitch.tv/*"],
       js: ["src/generic.js"],
       runAt: "document_idle",
-    },
-  ]);
+    });
+  }
+  if (!have.has(ANTIPOPUP_SCRIPT_ID)) {
+    toAdd.push({
+      id: ANTIPOPUP_SCRIPT_ID,
+      matches: ["<all_urls>"],
+      excludeMatches: ["*://*.youtube.com/*", "*://*.twitch.tv/*"],
+      js: ["src/antipopup.js"],
+      // Debe correr ANTES que los scripts del sitio y en su mismo contexto
+      // para poder reemplazar window.open.
+      runAt: "document_start",
+      world: "MAIN",
+    });
+  }
+  if (toAdd.length) {
+    await chrome.scripting.registerContentScripts(toAdd);
+  }
 }
